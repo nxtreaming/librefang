@@ -886,6 +886,14 @@ In-crate only; no cross-crate error-shape changes.
 
 ### Added
 
+- **dashboard: guide the user to start a new session when a conversation hits the token / context-window limit** (#6211) (@houko).
+  When the latest turn in the agent chat fails with a token / context-window or length / quota limit, the chat view now shows an inline guidance banner with a one-click "Start a new session" action that reuses the existing `useCreateAgentSession` mutation, instead of leaving only a raw error bubble.
+  Detection is a frontend heuristic over the daemon / provider error string (`isContextLimitError`), because the chat surface carries no structured per-turn context-exhaustion signal; the heuristic matches the canonical phrases the kernel's `classify_streaming_error` emits and explicitly suppresses the banner for an internal usage / spending-budget cap (where a new session would not help).
+  This complements the #6215 context-usage indicator (which shows *how full* the window is but does not classify a failed turn).
+  The banner is scoped to the agent session chat view — channels are config-only surfaces in the dashboard with no conversation UI.
+  Dashboard-only change; covered by `ChatPage.limit.test.ts`.
+  Closes #6211.
+
 - **sec(sandbox): protect the audit anchor from WASM skill `fs_write` via a capability deny-list** (#6182) (@houko).
   The WASM sandbox previously gated `fs_write` solely on glob capability matching, so a skill granted a broad `FileWrite` subtree — or the universal `FileWrite("*")` — could truncate the audit anchor (`[audit].anchor_path`, default `data_dir/audit.anchor`) and silently break the tamper-evident Merkle chain.
   `ToolPolicy` gains a `protected_write_paths()` method (default empty; the kernel returns the boot-resolved anchor), and `host_fs_write` now denies any write whose canonical target matches a protected path *above* the capability check, so even `FileWrite("*")` cannot reach the anchor.
