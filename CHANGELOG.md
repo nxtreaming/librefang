@@ -1038,6 +1038,9 @@ In-crate only; no cross-crate error-shape changes.
   A `package-lock.json` is now committed so installs are reproducible and CI can run `npm audit` against a locked graph.
   Closes #6180.
 
+- **sec(install): enforce SHA256 verification in install.sh, remove silent skip paths** (#6179) (@mrchn).
+  `install.sh` previously skipped SHA256 verification silently in two cases: when no hash tool (`sha256sum`/`shasum`) was present on the system, and when the expected `.sha256` file was missing from the GitHub release — in both cases the install proceeded as if verification had passed.
+  Verification now fails loudly (non-zero exit, clear error message) instead of silently succeeding, closing the integrity-check bypass.
 - **ci: the Windows test lane is green again — `librefang-api` now builds vendored OpenSSL on Windows so `webauthn-rs` links** (#6161) (@houko).
   The passkey/WebAuthn work (#5981) added `webauthn-rs`, which pulls in `webauthn-rs-core` → native `openssl-sys`; the Windows MSVC runners have no discoverable system OpenSSL, so `cargo test --no-run --workspace` failed there with "Could not find directory of OpenSSL installation".
   A Windows-gated `openssl = { features = ["vendored"] }` dependency in `crates/librefang-api/Cargo.toml` makes cargo feature-unification build `openssl-sys` from source on Windows only; Unix keeps using the system library and is unaffected.
